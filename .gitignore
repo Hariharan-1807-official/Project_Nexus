@@ -22,19 +22,32 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Environments / IDE
-.venv
+# Environment & Secrets (NEVER push to git)
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.p12
+*.crt
+*.id_rsa
+secrets/
+
+# Virtual Environments & IDE
+.venv/
 venv/
 ENV/
 env/
 .idea/
 .vscode/
+.gemini/
 
-# Pytest / Coverage
+# Pytest / Coverage / Logs
 .pytest_cache/
 .coverage
 htmlcov/
+*.log
 
-# Local OS
+# OS
 .DS_Store
 Thumbs.db
