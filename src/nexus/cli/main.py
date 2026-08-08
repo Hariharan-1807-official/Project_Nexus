@@ -560,6 +560,13 @@ def repair(
         console.print(f"[green]✓[/green] All config files are valid JSON. Nothing to repair.")
 
 
+def _resolve_root(p: Any) -> Path:
+    """Safely resolve project_root whether called via Typer CLI or shell function call."""
+    if isinstance(p, Path):
+        return p.resolve()
+    return Path(".").resolve()
+
+
 # ---------------------------------------------------------------------------
 # Phase 4 Commands — GitHub, Docker, Diagnostics
 # ---------------------------------------------------------------------------
@@ -570,7 +577,7 @@ def issue(
     project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
 ) -> None:
     """Fetch and display a GitHub issue with recommended agent for execution."""
-    root = (project_root or Path(".")).resolve()
+    root = _resolve_root(project_root)
 
     if not github_mod.gh_installed():
         console.print("[red]✗[/red] gh CLI is not installed. Install it from https://cli.github.com")
@@ -619,7 +626,7 @@ def investigate(
     project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
 ) -> None:
     """Read-only investigation of a GitHub issue. Generates root-cause hypothesis without modifying code."""
-    root = (project_root or Path(".")).resolve()
+    root = _resolve_root(project_root)
 
     if not github_mod.gh_installed():
         console.print("[red]✗[/red] gh CLI is not installed.")
@@ -672,7 +679,7 @@ def docker(
     project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
 ) -> None:
     """Show live status of Docker containers and compose configuration."""
-    root = (project_root or Path(".")).resolve()
+    root = _resolve_root(project_root)
 
     if not docker_mod.docker_installed():
         console.print("[red]✗[/red] Docker CLI is not installed.")
@@ -705,7 +712,7 @@ def diagnose(
     project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
 ) -> None:
     """Run cross-source diagnostics (Git, Docker, project files, env) for root-cause analysis."""
-    root = (project_root or Path(".")).resolve()
+    root = _resolve_root(project_root)
 
     console.print("[bold cyan]Running cross-source diagnostics...[/bold cyan]")
     diag = run_diagnose(root)
@@ -745,7 +752,7 @@ def pr(
     project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
 ) -> None:
     """Create a GitHub pull request from current branch changes (always requires confirmation)."""
-    root = (project_root or Path(".")).resolve()
+    root = _resolve_root(project_root)
 
     if not github_mod.gh_installed():
         console.print("[red]✗[/red] gh CLI is not installed.")

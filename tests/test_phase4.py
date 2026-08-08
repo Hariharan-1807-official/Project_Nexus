@@ -217,3 +217,21 @@ class TestTC46PRConfirmation:
         result = runner.invoke(app, ["pr", "--title", "Feature X"], input="y\n")
         assert result.exit_code == 0
         assert "Pull Request Created!" in result.output
+
+    def test_shell_dispatch_phase4_commands(self):
+        """Verify interactive shell _dispatch_shell_line works cleanly for Phase 4 commands without OptionInfo errors."""
+        from nexus.cli.main import _dispatch_shell_line
+        with patch("nexus.core.github.gh_installed", return_value=True), \
+             patch("nexus.core.github.fetch_issue") as mock_fetch, \
+             patch("nexus.core.docker.docker_installed", return_value=True), \
+             patch("nexus.core.docker.docker_available", return_value=True), \
+             patch("nexus.core.docker.list_containers", return_value=[]):
+            
+            mock_fetch.return_value = GitHubIssue(
+                number=1, title="Shell test issue", state="OPEN",
+            )
+            # Dispatch shell commands directly — should return True and not raise OptionInfo exceptions
+            assert _dispatch_shell_line("issue 1") is True
+            assert _dispatch_shell_line("investigate 1") is True
+            assert _dispatch_shell_line("docker") is True
+            assert _dispatch_shell_line("diagnose") is True
