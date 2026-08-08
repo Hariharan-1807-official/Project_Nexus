@@ -268,3 +268,9 @@ class TestTC55WardenCLICommands:
         result = runner.invoke(app, ["warden", "set", "codex", "git_push", "invalid_state"])
         assert result.exit_code != 0
         assert "Unknown state" in result.output
+
+    def test_shell_dispatch_warden_commands(self, tmp_path):
+        from nexus.cli.main import _dispatch_shell_line
+        # Dispatch warden from shell loop
+        assert _dispatch_shell_line("warden") is True
+        assert _dispatch_shell_line(f"warden set codex execute_commands allow") is True

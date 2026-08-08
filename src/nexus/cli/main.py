@@ -787,19 +787,8 @@ def pr(
         raise typer.Exit(1)
 
 
-# ---------------------------------------------------------------------------
-# Phase 5 Commands — Warden Security System
-# ---------------------------------------------------------------------------
-
-@warden_app.callback(invoke_without_command=True)
-def warden_callback(
-    ctx: typer.Context,
-    project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
-) -> None:
+def _display_warden_matrix(project_root: Any = None) -> None:
     """Display Warden security capabilities and permission matrix for all agents."""
-    if ctx.invoked_subcommand is not None:
-        return
-
     root = _resolve_root(project_root)
     engine = WardenEngine(root)
     perms = engine.load_permissions()
@@ -830,6 +819,18 @@ def warden_callback(
         table.add_row(*row)
 
     console.print(table)
+
+
+@warden_app.callback(invoke_without_command=True)
+def warden_callback(
+    ctx: typer.Context,
+    project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
+) -> None:
+    """Display Warden security capabilities and permission matrix for all agents."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    _display_warden_matrix(project_root)
 
 
 @warden_app.command("set")
@@ -1155,8 +1156,7 @@ def _dispatch_shell_line(line: str) -> bool:
             else:
                 _run_typer_command(warden_set, args[1], args[2], args[3])
         else:
-            ctx = typer.Context(warden_app)
-            _run_typer_command(warden_callback, ctx)
+            _display_warden_matrix()
         return True
 
     # Easter eggs — checked before the generic "not available" fallback
