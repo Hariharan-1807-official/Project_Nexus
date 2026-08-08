@@ -36,6 +36,11 @@ from nexus.models.agent import AgentStatus
 from nexus.core.warden.engine import WardenEngine
 from nexus.models.warden import ActionCategory, PermissionState
 
+from nexus.core.planner.engine import decompose_mission
+from nexus.core.swarm.orchestrator import execute_swarm_plan
+from nexus.core.review.reviewer import perform_review
+from nexus.models.planner import MissionPlan, SwarmResult, ReviewArtifact, StepStatus
+
 app = typer.Typer(
     name="nexus",
     help="Nexus — control plane for AI coding agents.",
@@ -874,6 +879,152 @@ def warden_set(
 
 
 # ---------------------------------------------------------------------------
+# Phase 6 Commands — Planner, Swarm, Review & Solve
+# ---------------------------------------------------------------------------
+
+@app.command()
+def mission(
+    goal: str = typer.Argument(..., help="High-level goal or task description"),
+    project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
+) -> None:
+    """Decompose a high-level goal into structured task steps with assigned agents."""
+    root = _resolve_root(project_root)
+    plan = decompose_mission(goal, root)
+
+    console.print()
+    console.print(f"[bold cyan]Mission Plan [{plan.mission_id}]:[/bold cyan] [bold]{plan.goal}[/bold]")
+    console.print(f"[dim]Note: {plan.notes}[/dim]")
+    console.print()
+
+    table = Table(box=box.ROUNDED, show_header=True, header_style="bold cyan")
+    table.add_column("Step")
+    table.add_column("Description")
+    table.add_column("Agent")
+    table.add_column("Category")
+    table.add_column("Status")
+
+    for i, step in enumerate(plan.steps, 1):
+        table.add_row(
+            f"Step {i}",
+            step.description,
+            f"[cyan]{step.preferred_agent}[/cyan]",
+            step.action_category.value,
+            f"[yellow]{step.status.value}[/yellow]",
+        )
+
+    console.print(table)
+
+
+@app.command()
+def swarm(
+    goal: str = typer.Argument(..., help="High-level goal to execute via Swarm Orchestration"),
+    project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
+) -> None:
+    """Execute a multi-agent swarm mission plan with Warden safety pre-checks and handoff logs."""
+    root = _resolve_root(project_root)
+
+    console.print(f"[bold cyan]Initializing Swarm Pipeline for:[/bold cyan] {goal}")
+    plan = decompose_mission(goal, root)
+    result = execute_swarm_plan(plan, root)
+
+    console.print()
+    status_style = "bold green" if result.status == StepStatus.completed else "bold red"
+    console.print(f"[{status_style}]Swarm Execution Status:[/{status_style}] {result.status.value.upper()}")
+    console.print(f"Steps Completed: {result.steps_completed}/{result.total_steps}")
+    console.print(f"Handoffs Logged:  {result.handoffs_logged}")
+
+    if result.review_artifact:
+        console.print()
+        console.print(f"[bold yellow]Peer Review ({result.review_artifact.reviewer_agent}):[/bold yellow]")
+        console.print(f"  Verdict: [bold]{result.review_artifact.verdict.value.upper()}[/bold]")
+        console.print(f"  Feedback: {result.review_artifact.feedback}")
+
+
+@app.command()
+def review(
+    author: Optional[str] = typer.Option("codex", "--author", "-a", help="Author agent name"),
+    summary: Optional[str] = typer.Option("Code refactoring and updates", "--summary", "-s", help="Summary of changes"),
+    project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
+) -> None:
+    """Run cross-agent peer review on code changes."""
+    root = _resolve_root(project_root)
+    artifact = perform_review(author_agent=author or "codex", summary_of_changes=summary or "", root=root)
+
+    console.print()
+    console.print(f"[bold cyan]Cross-Agent Peer Review [{artifact.review_id}]:[/bold cyan]")
+    console.print(f"  [dim]Author Agent:[/dim]   [cyan]{artifact.author_agent}[/cyan]")
+    console.print(f"  [dim]Reviewer Agent:[/dim] [cyan]{artifact.reviewer_agent}[/cyan]")
+    verdict_style = "bold green" if artifact.verdict.value == "approve" else "bold yellow"
+    console.print(f"  [dim]Verdict:[/dim]        [{verdict_style}]{artifact.verdict.value.upper()}[/{verdict_style}]")
+    console.print(f"  [dim]Feedback:[/dim]       {artifact.feedback}")
+
+
+@app.command()
+def solve(
+    number: int = typer.Argument(..., help="GitHub issue number to solve"),
+    project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
+) -> None:
+    """
+    End-to-end issue resolution workflow (ADR-011).
+    
+    Pipeline: issue -> diagnose -> plan -> swarm -> review -> pr prompt
+    Unlocked in Phase 6 now that Warden (Phase 5) is active to protect execution.
+    """
+    root = _resolve_root(project_root)
+
+    if not github_mod.gh_installed():
+        console.print("[red]✗[/red] gh CLI is not installed.")
+        raise typer.Exit(1)
+
+    issue_data = github_mod.fetch_issue(number, cwd=root)
+    if not issue_data:
+        console.print(f"[red]✗[/red] Could not fetch GitHub issue #{number}.")
+        raise typer.Exit(1)
+
+    console.print()
+    console.print(f"[bold cyan]🚀 Starting End-to-End Solve Workflow for Issue #{number}:[/bold cyan] [bold]{issue_data.title}[/bold]")
+
+    # 1. Diagnostics Pass
+    console.print("\n[bold yellow]Step 1: Running Diagnostics...[/bold yellow]")
+    diag = run_diagnose(root)
+    console.print(f"  [dim]Problem:[/dim] {diag.problem}")
+    console.print(f"  [dim]Hypothesis:[/dim] {diag.likely_root_cause}")
+
+    # 2. Mission Planning
+    console.print("\n[bold yellow]Step 2: Planning Mission Decomposition...[/bold yellow]")
+    plan = decompose_mission(f"Fix Issue #{number}: {issue_data.title}", root)
+    console.print(f"  [dim]Created Plan:[/dim] {plan.mission_id} ({len(plan.steps)} steps)")
+
+    # 3. Swarm Execution
+    console.print("\n[bold yellow]Step 3: Executing Swarm Pipeline...[/bold yellow]")
+    result = execute_swarm_plan(plan, root)
+    console.print(f"  [dim]Swarm Status:[/dim] {result.status.value.upper()} ({result.steps_completed}/{result.total_steps} steps)")
+
+    # 4. Cross-Agent Peer Review
+    if result.review_artifact:
+        console.print("\n[bold yellow]Step 4: Cross-Agent Peer Review...[/bold yellow]")
+        console.print(f"  [dim]Reviewer:[/dim] {result.review_artifact.reviewer_agent} -> {result.review_artifact.verdict.value.upper()}")
+
+    # 5. PR Confirmation Prompt (ADR-002 Safety Enforcement)
+    console.print("\n[bold yellow]Step 5: Pull Request Preparation...[/bold yellow]")
+    console.print(f"Ready to submit PR for Issue #{number}: {issue_data.title}")
+    confirm = typer.confirm("Do you want to create a Pull Request on GitHub now?", default=False)
+
+    if confirm:
+        pr_res = create_pr(
+            title=f"Fix #{number}: {issue_data.title}",
+            body=f"Resolves #{number}.\n\nDiagnostics hypothesis: {diag.likely_root_cause}",
+            cwd=root,
+        )
+        if pr_res.created and pr_res.url:
+            console.print(f"[bold green]✓ Pull Request Created![/bold green] {pr_res.url}")
+        else:
+            console.print(f"[red]✗ PR creation failed:[/red] {pr_res.error}")
+    else:
+        console.print("[dim]PR creation skipped.[/dim]")
+
+
+# ---------------------------------------------------------------------------
 # Easter eggs
 # ---------------------------------------------------------------------------
 
@@ -1039,6 +1190,10 @@ _SHELL_COMMANDS = {
     "diagnose":    "Run cross-source diagnostics engine",
     "pr":          "Create a GitHub pull request",
     "warden":      "View/manage security permissions matrix",
+    "mission":     "Decompose high-level goal into task steps",
+    "swarm":       "Execute multi-agent swarm pipeline",
+    "review":      "Run cross-agent peer review",
+    "solve":       "End-to-end issue resolution workflow",
     "help":        "Show this help",
     "exit":        "Exit the shell",
     "quit":        "Exit the shell",
@@ -1159,16 +1314,69 @@ def _dispatch_shell_line(line: str) -> bool:
             _display_warden_matrix()
         return True
 
+    if cmd == "mission":
+        goal_text = " ".join(args) if args else "General project maintenance"
+        _run_typer_command(mission, goal_text)
+        return True
+
+    if cmd == "swarm":
+        goal_text = " ".join(args) if args else "General project maintenance"
+        _run_typer_command(swarm, goal_text)
+        return True
+
+    if cmd == "review":
+        _run_typer_command(review)
+        return True
+
+    if cmd == "solve":
+        if not args:
+            console.print("[red]✗[/red] Usage: solve <number>")
+        else:
+            try:
+                num = int(args[0])
+                _run_typer_command(solve, num)
+            except ValueError:
+                console.print("[red]✗[/red] Issue number must be an integer.")
+        return True
+
     # Easter eggs — checked before the generic "not available" fallback
     if _easter_egg(cmd, args):
         return True
 
-    # Unrecognised — natural-language stub (Router wired in Phase 5)
-    safe_line = _safe_str(line.strip())
-    console.print(
-        f"[yellow]?[/yellow] [dim]'{safe_line}' — natural-language routing not yet available "
-        f"(Phase 5+). Type [bold]help[/bold] for commands.[/dim]"
-    )
+    # Unrecognised — Natural Language Groq Router (Phase 6)
+    from nexus.core.router.llm_router import route_natural_language
+    route_res = route_natural_language(line.strip())
+
+    if route_res.get("status") == "success":
+        intent_cmd = route_res.get("intent", "mission")
+        rec_agent = route_res.get("agent", "codex")
+        summary_text = route_res.get("summary", line.strip())
+        reasoning = route_res.get("reasoning", "")
+
+        console.print(f"\n[bold magenta]🤖 AI Router[/bold magenta] [dim]({reasoning})[/dim]")
+        console.print(f"  [dim]Intent:[/dim] [bold cyan]{intent_cmd}[/bold cyan] | [dim]Recommended Agent:[/dim] [bold yellow]{rec_agent}[/bold yellow]")
+        console.print()
+
+        if intent_cmd == "mission":
+            _run_typer_command(mission, summary_text)
+        elif intent_cmd == "swarm":
+            _run_typer_command(swarm, summary_text)
+        elif intent_cmd == "investigate":
+            _run_typer_command(investigate, 1)
+        elif intent_cmd == "diagnose":
+            _run_typer_command(diagnose)
+        elif intent_cmd == "health":
+            _run_typer_command(health)
+        elif intent_cmd == "scan":
+            _run_typer_command(scan)
+        else:
+            _run_typer_command(mission, summary_text)
+    else:
+        safe_line = _safe_str(line.strip())
+        console.print(
+            f"[yellow]?[/yellow] [dim]'{safe_line}' — set GROQ_API_KEY in .env for natural-language routing. "
+            f"Type [bold]help[/bold] for commands.[/dim]"
+        )
     return True
 
 

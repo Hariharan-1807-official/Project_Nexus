@@ -118,11 +118,11 @@ class TestTC42InvestigationAndSolveAbsence:
         files_after = set(p for p in tmp_path.rglob("*") if ".nexus" not in p.parts)
         assert files_before == files_after
 
-    def test_tc42a_nexus_solve_command_does_not_exist(self):
-        """ADR-011 negative test — 'nexus solve' MUST NOT exist in CLI until Phase 6."""
-        result = runner.invoke(app, ["solve", "42"])
-        assert result.exit_code != 0
-        assert "No such command 'solve'" in result.output or "Error" in result.output or result.exit_code == 2
+    def test_tc42a_nexus_solve_command_exists_in_phase6(self):
+        """ADR-011 — 'nexus solve' is unlocked in Phase 6 now that Warden (Phase 5) is active."""
+        result = runner.invoke(app, ["solve", "--help"])
+        assert result.exit_code == 0
+        assert "End-to-end issue resolution workflow" in result.output
 
 
 # ===========================================================================
