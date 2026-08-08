@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nexus"
+version = "0.1.0"
+description = "Control plane for AI coding agents"
+requires-python = ">=3.11"
+dependencies = [
+    "typer==0.15.4",
+    "pydantic==2.13.4",
+    "rich==13.9.4",
+]
+
+[project.scripts]
+nexus = "nexus.cli.main:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v"
+
+[tool.setuptools]
+package-dir = {"" = "src"}

@@ -1,0 +1,34 @@
+{
+  "codex": {
+    "read_source": "allow",
+    "write_source": "approval",
+    "execute_commands": "approval",
+    "git_push": "approval",
+    "delete_files": "approval",
+    "network": "deny"
+  },
+  "antigravity": {
+    "read_source": "allow",
+    "write_source": "approval",
+    "execute_commands": "approval",
+    "git_push": "approval",
+    "delete_files": "approval",
+    "network": "deny"
+  },
+  "kiro": {
+    "read_source": "allow",
+    "write_source": "approval",
+    "execute_commands": "approval",
+    "git_push": "approval",
+    "delete_files": "approval",
+    "network": "deny"
+  },
+  "cursor": {
+    "read_source": "allow",
+    "write_source": "approval",
+    "execute_commands": "approval",
+    "git_push": "approval",
+    "delete_files": "approval",
+    "network": "deny"
+  }
+}

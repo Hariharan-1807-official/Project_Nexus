@@ -1,0 +1,110 @@
+{
+  "rules": [
+    {
+      "task_type": "backend_coding",
+      "signals": [
+        "api",
+        "backend",
+        "database",
+        "server",
+        "endpoint"
+      ],
+      "preferred_agents": [
+        "codex",
+        "antigravity"
+      ]
+    },
+    {
+      "task_type": "frontend_ui",
+      "signals": [
+        "component",
+        "ui",
+        "layout",
+        "styling",
+        "frontend"
+      ],
+      "preferred_agents": [
+        "kiro",
+        "cursor",
+        "antigravity"
+      ]
+    },
+    {
+      "task_type": "research",
+      "signals": [
+        "research",
+        "compare",
+        "investigate options",
+        "what should we use"
+      ],
+      "preferred_agents": [
+        "antigravity"
+      ]
+    },
+    {
+      "task_type": "github_issue",
+      "signals": [
+        "issue",
+        "bug report",
+        "github"
+      ],
+      "preferred_agents": [
+        "codex",
+        "antigravity"
+      ]
+    },
+    {
+      "task_type": "testing",
+      "signals": [
+        "test",
+        "coverage",
+        "unit test",
+        "integration test"
+      ],
+      "preferred_agents": [
+        "codex"
+      ]
+    },
+    {
+      "task_type": "documentation",
+      "signals": [
+        "docs",
+        "readme",
+        "documentation",
+        "comment"
+      ],
+      "preferred_agents": [
+        "antigravity",
+        "codex"
+      ]
+    },
+    {
+      "task_type": "review",
+      "signals": [
+        "review",
+        "audit",
+        "check this"
+      ],
+      "preferred_agents": [
+        "antigravity",
+        "codex"
+      ]
+    },
+    {
+      "task_type": "devops",
+      "signals": [
+        "docker",
+        "deploy",
+        "ci",
+        "pipeline",
+        "compose"
+      ],
+      "preferred_agents": [
+        "codex",
+        "antigravity"
+      ]
+    }
+  ],
+  "default_agent": "codex",
+  "fallback_on_unavailable": true
+}

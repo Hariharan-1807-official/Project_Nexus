@@ -1,0 +1,32 @@
+{
+  "watchers": {
+    "git": {
+      "mode": "event",
+      "trigger": "on_commit"
+    },
+    "tests": {
+      "mode": "interval",
+      "interval_seconds": 300
+    },
+    "dependencies": {
+      "mode": "interval",
+      "interval_seconds": 86400
+    },
+    "security": {
+      "mode": "interval",
+      "interval_seconds": 86400
+    },
+    "github": {
+      "mode": "interval",
+      "interval_seconds": 120
+    },
+    "docker": {
+      "mode": "interval",
+      "interval_seconds": 30
+    }
+  },
+  "global": {
+    "enabled": false,
+    "auto_fix_attempt": false
+  }
+}

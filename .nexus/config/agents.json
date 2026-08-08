@@ -1,0 +1,24 @@
+{
+  "agents": [
+    {
+      "name": "codex",
+      "enabled": true,
+      "executable": "codex"
+    },
+    {
+      "name": "antigravity",
+      "enabled": true,
+      "executable": "agy"
+    },
+    {
+      "name": "kiro",
+      "enabled": true,
+      "executable": "kiro"
+    },
+    {
+      "name": "cursor",
+      "enabled": false,
+      "executable": "cursor"
+    }
+  ]
+}
