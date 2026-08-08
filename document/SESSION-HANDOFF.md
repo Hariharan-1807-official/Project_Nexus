@@ -20,13 +20,13 @@
 
 Setting up capability profiles, approval prompts, and security enforcement layer.
 
-### Commands Being Added
+### Commands Tested Live & Verified
 
-- `nexus issue <n>` — fetch GitHub issue via `gh` CLI
-- `nexus investigate <n>` — read-only analysis (no code changes)
-- `nexus pr` — create PR (always requires confirmation)
-- `nexus docker` — live container status
-- `nexus diagnose` — cross-source diagnostics engine
+- `nexus issue 1` — Successfully fetched real issue from `Hariharan-1807-official/Project_Nexus#1` via `gh` CLI, evaluated routing signals, recommended Codex.
+- `nexus investigate 1` — Ran read-only analysis on Issue #1, correlated evidence across Git + Docker + Project files without modifying code (ADR-011).
+- `nexus docker` — Rendered live container status table (1 running Redis container, 4 exited containers).
+- `nexus diagnose` — Gathered cross-source evidence, qualitative output without numeric scores (ADR-006).
+- `nexus solve 42` — Negative test confirmed command absence (ADR-011). engine
 
 ### Critical Constraints
 

@@ -17,3 +17,6 @@ THIS IS NOT JSON {{{{ GARBAGE
 {"timestamp": "2026-08-08T12:02:09.485937+00:00", "event_type": "health_check", "agent": null, "action": "nexus diagnose", "task_id": null, "result": "ok", "detail": {"problem": "Docker is not running."}}
 {"timestamp": "2026-08-08T12:03:52.036218+00:00", "event_type": "health_check", "agent": null, "action": "nexus diagnose", "task_id": null, "result": "ok", "detail": {"problem": "No obvious issues detected."}}
 {"timestamp": "2026-08-08T12:04:09.218453+00:00", "event_type": "health_check", "agent": null, "action": "nexus diagnose", "task_id": null, "result": "ok", "detail": {"problem": "No obvious issues detected."}}
+{"timestamp": "2026-08-08T12:10:33.246025+00:00", "event_type": "system", "agent": null, "action": "nexus issue 1", "task_id": null, "result": "ok", "detail": {"number": 1, "title": "Add Redis caching to diagnostic scanner"}}
+{"timestamp": "2026-08-08T12:11:07.155676+00:00", "event_type": "agent_action", "agent": "nexus", "action": "nexus investigate 1", "task_id": null, "result": "ok", "detail": {"hypothesis": "All checked sources appear healthy."}}
+{"timestamp": "2026-08-08T12:11:28.249111+00:00", "event_type": "health_check", "agent": null, "action": "nexus diagnose", "task_id": null, "result": "ok", "detail": {"problem": "No obvious issues detected."}}
