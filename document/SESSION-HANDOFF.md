@@ -8,17 +8,18 @@
 
 ## Current Phase: Phase 4 — GitHub + Docker + Diagnostics Engine
 
-### What's Done (Phases 1–4)
+### What's Done (Phases 1–5)
 
 - **Phase 1 — CLI Core:** `nexus init`, `agents`, `open`, interactive shell with easter eggs, `repair` command. 31 tests.
 - **Phase 2 — Agent Abstraction:** 4 adapters (Codex, Antigravity, Kiro, Cursor), `Agent` base class, `AgentCapabilities` model, live status detection, PATH resolution for conda. 70 tests.
 - **Phase 3 — Project Intelligence:** `nexus scan`, `health`, `status`, `explain`. Shared Memory (`events.jsonl`, `decisions.jsonl`, `agent-handoffs.jsonl`). 53 tests.
 - **Phase 4 — GitHub + Docker + Diagnostics:** `nexus issue`, `investigate`, `docker`, `diagnose`, `pr`. Diagnostics engine, models, gh/docker integration. 13 tests.
-- **All 167 tests pass.** No known failures.
+- **Phase 5 — Warden Security System:** `nexus warden`, `nexus warden set`. Policy engine, audit trail (`warden_allow`, `warden_deny`, `warden_prompt`), interactive prompts (ADR-002), task-scoped approvals (ADR-012). 14 tests.
+- **All 182 tests pass.** No known failures.
 
-### What's In Progress (Phase 5 — Warden)
+### What's In Progress (Phase 6 — Planner + Swarm + Review)
 
-Setting up capability profiles, approval prompts, and security enforcement layer.
+Planning mission decomposition, swarm orchestration, review handoffs, and `nexus solve`.
 
 ### Commands Tested Live & Verified
 

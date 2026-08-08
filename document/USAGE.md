@@ -234,8 +234,8 @@ Nexus is built in phases. Commands available now vs. coming later:
 | Phase 2 — Agent Abstraction | ✅ Complete | Live status, capability profiles, adapter layer |
 | Phase 3 — Project Intelligence | ✅ Complete | `scan`, `health`, `status`, `explain` |
 | Phase 4 — GitHub + Docker + Diagnostics | ✅ Complete | `issue`, `investigate`, `docker`, `diagnose`, `pr` |
-| Phase 5 — Warden | 🔜 Next | Permission prompts, audit log |
-| Phase 6 — Planner + Swarm + Review | 🔜 | `mission`, `swarm`, `review`, `solve` |
+| Phase 5 — Warden | ✅ Complete | `warden`, `warden set`, capability profiles, audit log |
+| Phase 6 — Planner + Swarm + Review | 🔜 Next | `mission`, `swarm`, `review`, `solve` |
 | Phase 7 — Background Daemon | 🔜 | `daemon`, background watchers |
 | Phase 8 — IDE Control | 🔜 | `ide`, `ide current` |
 

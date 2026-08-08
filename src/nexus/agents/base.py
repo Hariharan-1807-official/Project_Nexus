@@ -16,7 +16,10 @@ import shutil
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from nexus.models.warden import ActionCategory, PermissionResult, PermissionRequest
 
 from nexus.models.agent import AgentCapabilities, AgentResult, AgentStatus
 from nexus.models.task import Task
@@ -181,6 +184,41 @@ class Agent(ABC):
     def capabilities(self) -> AgentCapabilities:
         """Return the verified capability profile for this agent."""
         ...
+
+    def check_warden_permission(
+        self,
+        action_category: ActionCategory,
+        description: str,
+        task_id: Optional[str] = None,
+        cwd: Optional[Path] = None,
+    ) -> PermissionResult:
+        """
+        Check Warden security policy for an action before execution (ADR-002, ADR-012).
+        Logs evaluation to memory audit trail.
+        """
+        from nexus.core.warden.engine import WardenEngine
+        from nexus.core.warden.audit import log_warden_evaluation
+        from nexus.models.warden import PermissionRequest
+        from nexus.core.memory import Memory
+
+        root = cwd or Path(".")
+        engine = WardenEngine(root)
+        request = PermissionRequest(
+            agent=self.NAME,
+            action_category=action_category,
+            description=description,
+            task_id=task_id,
+        )
+        result = engine.evaluate(request)
+
+        # Log audit trail if .nexus directory exists
+        try:
+            mem = Memory(root)
+            log_warden_evaluation(mem, request, result)
+        except Exception:
+            pass
+
+        return result
 
     # ------------------------------------------------------------------
     # Convenience

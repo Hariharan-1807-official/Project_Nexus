@@ -33,12 +33,23 @@ from nexus.agents import REGISTRY
 from nexus.agents.base import resolve_executable
 from nexus.models.agent import AgentStatus
 
+from nexus.core.warden.engine import WardenEngine
+from nexus.models.warden import ActionCategory, PermissionState
+
 app = typer.Typer(
     name="nexus",
     help="Nexus — control plane for AI coding agents.",
     invoke_without_command=True,
     no_args_is_help=False,
 )
+
+warden_app = typer.Typer(
+    name="warden",
+    help="Warden — security & permissions management.",
+    invoke_without_command=True,
+    no_args_is_help=False,
+)
+app.add_typer(warden_app, name="warden")
 
 import sys as _sys
 import io as _io
@@ -777,6 +788,91 @@ def pr(
 
 
 # ---------------------------------------------------------------------------
+# Phase 5 Commands — Warden Security System
+# ---------------------------------------------------------------------------
+
+@warden_app.callback(invoke_without_command=True)
+def warden_callback(
+    ctx: typer.Context,
+    project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
+) -> None:
+    """Display Warden security capabilities and permission matrix for all agents."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    root = _resolve_root(project_root)
+    engine = WardenEngine(root)
+    perms = engine.load_permissions()
+
+    console.print()
+    console.print("[bold yellow]🛡️  Warden Security Policy & Permission Matrix[/bold yellow]")
+    console.print("[dim]Edit rules via `nexus warden set <agent> <action> <state>` or edit .nexus/config/permissions.json directly.[/dim]")
+    console.print()
+
+    table = Table(box=box.ROUNDED, show_header=True, header_style="bold cyan")
+    table.add_column("Agent")
+    for cat in ActionCategory:
+        table.add_column(cat.value)
+
+    known_agent_names = ["codex", "antigravity", "kiro", "cursor"]
+    for agent_name in known_agent_names:
+        agent_perms = perms.get(agent_name, {})
+        row = [agent_name]
+        for cat in ActionCategory:
+            val = agent_perms.get(cat.value, "approval")
+            if val == "allow":
+                style_val = "[green]allow[/green]"
+            elif val == "deny":
+                style_val = "[red]deny[/red]"
+            else:
+                style_val = "[yellow]approval[/yellow]"
+            row.append(style_val)
+        table.add_row(*row)
+
+    console.print(table)
+
+
+@warden_app.command("set")
+def warden_set(
+    agent: str = typer.Argument(..., help="Agent name e.g. codex, antigravity, kiro, cursor"),
+    action: str = typer.Argument(..., help="Action category e.g. execute_commands, git_push, delete_files"),
+    state: str = typer.Argument(..., help="Permission state: allow, deny, approval"),
+    project_root: Optional[Path] = typer.Option(None, "--path", "-p", help="Project root directory"),
+) -> None:
+    """Update permission setting in .nexus/config/permissions.json."""
+    root = _resolve_root(project_root)
+    engine = WardenEngine(root)
+
+    agent_lower = agent.lower()
+    if agent_lower not in ["codex", "antigravity", "kiro", "cursor"]:
+        console.print(f"[red]✗[/red] Unknown agent '{agent}'. Known: codex, antigravity, kiro, cursor.")
+        raise typer.Exit(1)
+
+    try:
+        action_cat = ActionCategory(action.lower())
+    except ValueError:
+        valid_cats = ", ".join(c.value for c in ActionCategory)
+        console.print(f"[red]✗[/red] Unknown action '{action}'. Valid actions: {valid_cats}.")
+        raise typer.Exit(1)
+
+    try:
+        perm_state = PermissionState(state.lower())
+    except ValueError:
+        console.print(f"[red]✗[/red] Unknown state '{state}'. Valid states: allow, deny, approval.")
+        raise typer.Exit(1)
+
+    success = engine.set_permission(agent_lower, action_cat, perm_state)
+    if success:
+        console.print(
+            f"[bold green]✓ Updated Permission:[/bold green] "
+            f"[cyan]{agent_lower}[/cyan] : [bold]{action_cat.value}[/bold] → [{perm_state.value}]{perm_state.value}[/{perm_state.value}]"
+        )
+    else:
+        console.print(f"[red]✗ Failed to write permission configuration.[/red]")
+        raise typer.Exit(1)
+
+
+# ---------------------------------------------------------------------------
 # Easter eggs
 # ---------------------------------------------------------------------------
 
@@ -941,6 +1037,7 @@ _SHELL_COMMANDS = {
     "docker":      "Show live status of Docker containers",
     "diagnose":    "Run cross-source diagnostics engine",
     "pr":          "Create a GitHub pull request",
+    "warden":      "View/manage security permissions matrix",
     "help":        "Show this help",
     "exit":        "Exit the shell",
     "quit":        "Exit the shell",
@@ -1049,6 +1146,17 @@ def _dispatch_shell_line(line: str) -> bool:
     if cmd == "pr":
         title = " ".join(args) if args else "Updates from Nexus"
         _run_typer_command(pr, title)
+        return True
+
+    if cmd == "warden":
+        if args and args[0].lower() == "set":
+            if len(args) < 4:
+                console.print("[red]✗[/red] Usage: warden set <agent> <action> <state>")
+            else:
+                _run_typer_command(warden_set, args[1], args[2], args[3])
+        else:
+            ctx = typer.Context(warden_app)
+            _run_typer_command(warden_callback, ctx)
         return True
 
     # Easter eggs — checked before the generic "not available" fallback

@@ -71,13 +71,13 @@ nexus
 | Phase 1 — CLI Core | `init`, `agents`, `open`, interactive shell | ✅ Complete | 31 |
 | Phase 2 — Agent Abstraction | 4 adapters, live status, capabilities | ✅ Complete | 70 |
 | Phase 3 — Project Intelligence | `scan`, `health`, `status`, `explain`, memory | ✅ Complete | 53 |
-| Phase 4 — GitHub + Docker + Diagnostics | `issue`, `investigate`, `docker`, `diagnose`, `pr` | 🔨 In Progress | — |
-| Phase 5 — Warden | Permission system, approval prompts, audit | 🔜 | — |
-| Phase 6 — Planner + Swarm + Review | `mission`, `swarm`, `review`, `solve` | 🔜 | — |
+| Phase 4 — GitHub + Docker + Diagnostics | `issue`, `investigate`, `docker`, `diagnose`, `pr` | ✅ Complete | 13 |
+| Phase 5 — Warden | Capability profiles, approval prompts, audit | ✅ Complete | 14 |
+| Phase 6 — Planner + Swarm + Review | `mission`, `swarm`, `review`, `solve` | 🔜 Next | — |
 | Phase 7 — Daemon | Background watchers, auto-diagnose | 🔜 | — |
 | Phase 8 — IDE Control | `nexus ide` | 🔜 | — |
 
-**Total tests: 154 passing** (as of Phase 3 completion)
+**Total tests: 182 passing** (as of Phase 5 completion)
 
 ---
 
