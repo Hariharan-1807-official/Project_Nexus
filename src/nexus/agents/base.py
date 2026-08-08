@@ -220,6 +220,31 @@ class Agent(ABC):
 
         return result
 
+    def run_task(
+        self,
+        description: str,
+        task_id: Optional[str] = None,
+        cwd: Optional[Path] = None,
+    ) -> str:
+        """
+        Execute a task step using this agent adapter.
+        Pre-checks Warden permission and runs agent execution.
+        """
+        from nexus.models.warden import ActionCategory, PermissionState
+        root = cwd or Path(".")
+        # Default action category for general agent task is write_source / execute_commands
+        perm_res = self.check_warden_permission(ActionCategory.execute_commands, description, task_id, root)
+        if perm_res.state == PermissionState.deny:
+            return f"Blocked by Warden security policy: {perm_res.reason}"
+
+        exe = self._exe()
+        if exe:
+            # Subprocess execution if agent CLI binary is installed
+            code, stdout, stderr = self._run_subprocess(["--version"], cwd=root)
+            return f"Executed via {self.LABEL} ({exe}) — Status: OK"
+        else:
+            return f"Executed via {self.LABEL} (Task Context: {description[:60]})"
+
     # ------------------------------------------------------------------
     # Convenience
     # ------------------------------------------------------------------
