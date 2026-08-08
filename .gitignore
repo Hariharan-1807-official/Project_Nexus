@@ -52,6 +52,6 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# Nexus Runtime Data (memory logs & scan results created at runtime)
+# Nexus Runtime & Project Data (generated locally at runtime)
 .nexus/memory/
-.nexus/project/context.json
+.nexus/project/
