@@ -91,6 +91,7 @@ def _review_with_llm(
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
+        "User-Agent": "Nexus-Control-Plane/1.0",
     }
 
     system_prompt = (

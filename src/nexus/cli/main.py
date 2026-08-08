@@ -132,6 +132,14 @@ def _safe_str(text: str) -> str:
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _resolve_root(path: Any = None) -> Path:
+    """Resolve Path safely whether argument is None, Path, or Typer Option/Argument Info."""
+    if isinstance(path, Path):
+        return path.resolve()
+    if isinstance(path, str) and path.strip():
+        return Path(path).resolve()
+    return Path.cwd().resolve()
+
 def _status_markup(status: AgentStatus) -> str:
     return {
         AgentStatus.ready:       "[green]ready[/green]",
@@ -440,7 +448,7 @@ def status(
     )
 ) -> None:
     """Show current project state: context, git, recent events."""
-    root = (path or Path.cwd()).resolve()
+    root = _resolve_root(path)
     snap = get_status(root)
 
     if "error" in snap:
@@ -1357,18 +1365,24 @@ def _dispatch_shell_line(line: str) -> bool:
         console.print(f"  [dim]Intent:[/dim] [bold cyan]{intent_cmd}[/bold cyan] | [dim]Recommended Agent:[/dim] [bold yellow]{rec_agent}[/bold yellow]")
         console.print()
 
-        if intent_cmd == "mission":
-            _run_typer_command(mission, summary_text)
-        elif intent_cmd == "swarm":
-            _run_typer_command(swarm, summary_text)
-        elif intent_cmd == "investigate":
-            _run_typer_command(investigate, 1)
-        elif intent_cmd == "diagnose":
-            _run_typer_command(diagnose)
+        if intent_cmd == "status":
+            _run_typer_command(status)
+        elif intent_cmd == "explain":
+            _run_typer_command(explain)
         elif intent_cmd == "health":
             _run_typer_command(health)
         elif intent_cmd == "scan":
             _run_typer_command(scan)
+        elif intent_cmd == "diagnose":
+            _run_typer_command(diagnose)
+        elif intent_cmd == "warden":
+            _display_warden_matrix()
+        elif intent_cmd == "review":
+            _run_typer_command(review)
+        elif intent_cmd == "swarm":
+            _run_typer_command(swarm, summary_text)
+        elif intent_cmd == "investigate":
+            _run_typer_command(investigate, 1)
         else:
             _run_typer_command(mission, summary_text)
     else:

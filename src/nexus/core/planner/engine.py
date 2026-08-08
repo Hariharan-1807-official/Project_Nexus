@@ -57,6 +57,7 @@ def _decompose_with_llm(mission_id: str, goal: str, context: dict, api_key: str)
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
+        "User-Agent": "Nexus-Control-Plane/1.0",
     }
 
     system_prompt = (

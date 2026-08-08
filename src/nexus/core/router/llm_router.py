@@ -76,6 +76,7 @@ def route_natural_language(prompt: str, root: Optional[Path] = None) -> Dict[str
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
+        "User-Agent": "Nexus-Control-Plane/1.0",
     }
 
     system_prompt = (
