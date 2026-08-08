@@ -76,27 +76,107 @@ def get_status(root: Path) -> dict:
     }
 
 
-def explain_project(root: Path) -> str:
+def explain_project(root: Optional[Path] = None) -> str:
     """
-    Generate a human-readable narrative describing the project state
-    and recent activity. Used by `nexus explain`.
+    Generate an intelligent narrative summary of the project.
+    
+    Reads documentation files (README.md, document/README.md, pyproject.toml)
+    and uses LLM API to summarize project purpose, architecture, and current status.
     """
-    status = get_status(root)
+    r = (root or Path.cwd()).resolve()
+    status = get_status(r)
+    root_name = r.name
 
-    if "error" in status:
-        return status["error"]
+    # 1. Search for project documentation files
+    doc_content = ""
+    candidate_docs = [
+        r / "README.md",
+        r / "document" / "README.md",
+        r / "pyproject.toml",
+        r / "package.json",
+    ]
+    for doc_path in candidate_docs:
+        if doc_path.exists():
+            try:
+                text = doc_path.read_text(encoding="utf-8").strip()
+                if text:
+                    doc_content += f"--- {doc_path.name} ---\n{text[:1500]}\n\n"
+            except Exception:
+                pass
 
-    lines: list[str] = []
-    ctx = status.get("context")
+    # 2. Try LLM API summary if key is available
+    from nexus.core.router.llm_router import load_groq_api_key
+    api_key = load_groq_api_key(r)
+    if api_key:
+        try:
+            llm_summary = _explain_with_llm(root_name, status, doc_content, api_key)
+            if llm_summary:
+                return llm_summary
+        except Exception:
+            pass
 
-    # --- Project identity ---
-    root_name = Path(status["project_root"]).name
-    if ctx:
+    # 3. Structural fallback summary
+    return _explain_fallback(root_name, status)
+
+
+def _explain_with_llm(root_name: str, status: dict, doc_content: str, api_key: str) -> Optional[str]:
+    """Call LLM API to generate executive summary based on documentation and project status."""
+    import json
+    import urllib.request
+    import urllib.error
+
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "User-Agent": "Nexus-Control-Plane/1.0",
+    }
+
+    system_prompt = (
+        "You are Nexus Intelligence Assistant. Provide a concise, professional executive summary of the software project.\n"
+        "Summarize:\n"
+        "1. Project Purpose & Core Architecture (based on README/docs provided).\n"
+        "2. Stack & Framework Highlights.\n"
+        "3. Current Status & Recent Activity.\n"
+        "Keep the output clean, structured, and easy to read. Do not include markdown codeblocks or quotes."
+    )
+
+    user_content = (
+        f"Project Name: {root_name}\n"
+        f"Status Context: {json.dumps(status)}\n\n"
+        f"Documentation Excerpts:\n{doc_content if doc_content else 'No README.md found.'}"
+    )
+
+    payload = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
+        ],
+        "temperature": 0.3,
+        "max_tokens": 450,
+    }
+
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+    with urllib.request.urlopen(req, timeout=12) as resp:
+        body = json.loads(resp.read().decode("utf-8"))
+        summary = body["choices"][0]["message"]["content"].strip()
+        return summary
+
+    return None
+
+
+def _explain_fallback(root_name: str, status: dict) -> str:
+    """Structural narrative summary when LLM is unavailable."""
+    lines = []
+    ctx   = status.get("context") or {}
+
+    if "languages" in ctx:
         langs  = ctx.get("languages", [])
         frames = ctx.get("frameworks", [])
         tools  = ctx.get("tools", [])
-        git    = ctx.get("git", {})
         struct = ctx.get("structure", {})
+        git    = ctx.get("git", {})
 
         lang_str  = ", ".join(langs)  if langs  else "unknown stack"
         frame_str = ", ".join(frames) if frames else None
