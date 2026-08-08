@@ -1180,8 +1180,45 @@ def _run_typer_command(fn, *args) -> None:
         pass
 
 
+def _setup_autocompletion() -> None:
+    """Setup cross-platform Tab autocompletion for interactive shell."""
+    try:
+        try:
+            import readline
+        except ImportError:
+            try:
+                import pyreadline3 as readline
+            except ImportError:
+                return
+
+        keywords = list(_SHELL_COMMANDS.keys()) + [
+            "codex", "antigravity", "kiro", "cursor",
+            "allow", "deny", "approval",
+            "read_source", "write_source", "execute_commands", "git_push", "delete_files", "network",
+            "set"
+        ]
+
+        def completer(text: str, state: int) -> Optional[str]:
+            # Get current line buffer if readline supports it
+            line_buf = readline.get_line_buffer() if hasattr(readline, "get_line_buffer") else text
+            tokens = line_buf.split()
+            last_word = tokens[-1] if tokens else text
+
+            matches = [w for w in keywords if w.startswith(last_word)]
+            if state < len(matches):
+                return matches[state]
+            return None
+
+        readline.set_completer(completer)
+        readline.parse_and_bind("tab: complete")
+    except Exception:
+        pass
+
+
 def _run_shell() -> None:
     from nexus import __version__
+    _setup_autocompletion()
+
     console.print()
     console.print(
         f"[bold cyan]NEXUS[/bold cyan] [dim]v{__version__} — "
