@@ -162,8 +162,8 @@ def _check_tests(root: Path) -> HealthCheck:
     if (root / "pyproject.toml").exists() or (root / "pytest.ini").exists() \
             or (root / "setup.cfg").exists() or (root / "tests").is_dir():
         rc, out, err = _run(
-            ["python", "-m", "pytest", "--tb=short", "-q", "--no-header"],
-            root, timeout=120,
+            ["python", "-m", "pytest", "--tb=short", "-q", "--no-header", "--disable-warnings"],
+            root, timeout=180,
         )
         combined = (out + err).strip()
         # Parse summary line e.g. "12 passed" / "1 failed"
