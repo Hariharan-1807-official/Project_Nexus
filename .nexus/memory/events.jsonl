@@ -13,3 +13,7 @@ THIS IS NOT JSON {{{{ GARBAGE
 {"timestamp": "2026-08-08T11:43:08.346683+00:00", "event_type": "system", "agent": null, "action": "nexus issue 42", "task_id": null, "result": "ok", "detail": {"number": 42, "title": "Fix memory leak in scanner"}}
 {"timestamp": "2026-08-08T11:43:18.732681+00:00", "event_type": "system", "agent": null, "action": "nexus issue 42", "task_id": null, "result": "ok", "detail": {"number": 42, "title": "Fix memory leak in scanner"}}
 {"timestamp": "2026-08-08T11:44:36.191012+00:00", "event_type": "system", "agent": null, "action": "nexus issue 42", "task_id": null, "result": "ok", "detail": {"number": 42, "title": "Fix memory leak in scanner"}}
+{"timestamp": "2026-08-08T11:56:58.140809+00:00", "event_type": "health_check", "agent": null, "action": "nexus diagnose", "task_id": null, "result": "ok", "detail": {"problem": "No obvious issues detected."}}
+{"timestamp": "2026-08-08T12:02:09.485937+00:00", "event_type": "health_check", "agent": null, "action": "nexus diagnose", "task_id": null, "result": "ok", "detail": {"problem": "Docker is not running."}}
+{"timestamp": "2026-08-08T12:03:52.036218+00:00", "event_type": "health_check", "agent": null, "action": "nexus diagnose", "task_id": null, "result": "ok", "detail": {"problem": "No obvious issues detected."}}
+{"timestamp": "2026-08-08T12:04:09.218453+00:00", "event_type": "health_check", "agent": null, "action": "nexus diagnose", "task_id": null, "result": "ok", "detail": {"problem": "No obvious issues detected."}}
